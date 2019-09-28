@@ -1,3 +1,3 @@
-# Data Scienct Took Kit
+# Data Science Took Kit
 
 ### High-Level Features
