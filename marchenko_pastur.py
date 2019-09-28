@@ -5,10 +5,10 @@ def _marchenko_pastur(x,gamma,sigma=1.0):
     y=1/gamma
     largest_eigenval = np.power(sigma*(1 + np.sqrt(1/gamma)),2)
     smallest_eigenval= np.power(sigma*(1 - np.sqrt(1/gamma)),2)
-    mp = (1/(2*np.pi*sigma*sigma*x*y))*np.sqrt((b - x)*(x - a))*(0 if (x>b or x<a) else 1)
+    mp = (1/(2*np.pi*sigma*sigma*x*y))*np.sqrt((largest_eigenval - x)*(x - smallest_eigenval))*(0 if (x>largest_eigenval or x<smallest_eigenval) else 1)
     return mp
 
-def marchenko_pastur(upper_bound=3,spacing=2000,sigma=1.0):
+def marchenko_pastur(n,p,upper_bound=3,spacing=2000,sigma=1.0):
     x_mp_dist = np.linspace(0,upper_bound,spacing)
     y_mp_dist = [_marchenko_pastur(x,n/p,sigma=sigma) for x in x_mp_dist]
 
@@ -36,10 +36,11 @@ def transform_to_zero_mean_and_unit_std(X):
     return mean_and_std_adjusted_X
 
 def marchenko_pastur_comparison(X,axis,histogram_bins=100,dist_upper_bound=3,dist_spacing=2000,sigma=1.0,transform=True):
-    x_mp, y_mp = marchenko_pastur(upper_bound=dist_upper_bound,spacing=dist_spacing,sigma=sigma)
+    p,n = X.shape
+    x_mp, y_mp = marchenko_pastur(n,p,upper_bound=dist_upper_bound,spacing=dist_spacing,sigma=sigma)
 
     if transform:
-        X_ = transform_to_zero_mean_and_unti_std(X)
+        X_ = transform_to_zero_mean_and_unit_std(X)
         x,y,w = eigenval_histogram(X_,bins=histogram_bins)
     else:
         x,y,w = eigenval_histogram(X,bins=histogram_bins)
