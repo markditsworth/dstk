@@ -24,7 +24,7 @@ def cumulative_variance_plot(S,axis):
     axis.set_xlabel('Component')
     axis.set_title('Variance explained using up to nth PC')
 
-def convert_to_graph(X,affinity_measure='euclidean',epsilon=1,random_walk_with_self_loop=False):
+def convert_to_graph(X,affinity_measure='euclidean',epsilon=1,random_walk_with_self_loop=False,truncate=False,threshold=0.1,explore=False):
     _,n = X.shape
     A = np.zeros((n,n))
     for i in range(n):
@@ -34,6 +34,11 @@ def convert_to_graph(X,affinity_measure='euclidean',epsilon=1,random_walk_with_s
                 p2 = X[:,j]
                 distance = np.linalg.norm(np.subtract(p2,p1))
                 A[i,j] = np.exp(-0.5*np.square(distance)/epsilon)
+    if explore:
+        return A.flatten()
+    if truncate:
+        mask = A < threshold
+        A[mask] = 0
     A = A + np.triu(A,1).T
     if random_walk_with_self_loop:
         assert affinity_measure == 'euclidean', "Euclidean affinity only supported for random walk transition matrix"
