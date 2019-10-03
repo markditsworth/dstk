@@ -24,21 +24,23 @@ def cumulative_variance_plot(S,axis):
     axis.set_xlabel('Component')
     axis.set_title('Variance explained using up to nth PC')
 
-def convert_to_graph(X,affinity_measure='euclidean',epsilon=1):
+def convert_to_graph(X,affinity_measure='euclidean',epsilon=1,random_walk_with_self_loop=False):
     _,n = X.shape
     A = np.zeros((n,n))
     for i in range(n):
         for j in range(n):
-            if j > i:
+            if j >= i:
                 p1 = X[:,i]
                 p2 = X[:,j]
                 distance = np.linalg.norm(np.subtract(p2,p1))
                 A[i,j] = np.exp(-0.5*np.square(distance)/epsilon)
-    A = A + A.T
-    deg = np.sum(A,axis=1).reshape(n,1)
-    A = np.divide(A,2*deg)
-    d = np.diag(np.ones(n)*0.5,0)
-    return A + d
+    A = A + np.triu(A,1).T
+    if random_walk_with_self_loop:
+        assert affinity_measure == 'euclidean', "Euclidean affinity only supported for random walk transition matrix"
+        deg = np.sum(A,axis=1).reshape(n,1)
+        A = np.divide(A,2*deg)
+        A = A + np.diag(np.ones(n)*0.5,0)
+    return A
 
 def _diffusion_map(A):
     U,S,_ = np.linalg.svd(A)
@@ -46,7 +48,7 @@ def _diffusion_map(A):
     return U
 
 def diffusion_map(X,dims=0,affinity_measure='euclidean'):
-    A = convert_to_graph(X,affinity_measure=affinity_measure)
+    A = convert_to_graph(X,affinity_measure=affinity_measure,random_walk_with_self_loop=True)
     dm = _diffusion_map(A)
     if dims > 0:
         return dm[:dims,:]
@@ -55,7 +57,7 @@ def diffusion_map(X,dims=0,affinity_measure='euclidean'):
 
 def embedding_2D(X,transform=True,method='PCA',affinity_measure='euclidean'):
     if method == 'PCA':
-        X_,_ = PCA(X,dims=2)
+        X_,_ = PCA(X,dims=2,transform=transform)
         return X_[0,:],X_[1,:]
     elif method == 'DiffMap':
         X_ = diffusion_map(X,dims=2,affinity_measure=affinity_measure)
